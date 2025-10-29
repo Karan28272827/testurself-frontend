@@ -2,15 +2,26 @@
 
 import { useState, useEffect } from "react";
 
+type Evaluation = {
+  is_correct: boolean;
+  justification: string;
+};
+
+type QuestionHistoryItem = {
+  question: string;
+  userAnswer: string;
+  evaluation: Evaluation;
+};
+
 export default function HomePage() {
-  const [currentQuestion, setCurrentQuestion] = useState("");
-  const [userAnswer, setUserAnswer] = useState("");
-  const [evaluation, setEvaluation] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [questionHistory, setQuestionHistory] = useState([]);
-  const [generatingQuestion, setGeneratingQuestion] = useState(false);
-  const [score, setScore] = useState({ correct: 0, total: 0 });
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<string>("");
+  const [userAnswer, setUserAnswer] = useState<string>("");
+  const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [questionHistory, setQuestionHistory] = useState<QuestionHistoryItem[]>([]);
+  const [generatingQuestion, setGeneratingQuestion] = useState<boolean>(false);
+  const [score, setScore] = useState<{ correct: number; total: number }>({ correct: 0, total: 0 });
+  const [showConfetti, setShowConfetti] = useState<boolean>(false);
 
   useEffect(() => {
     if (showConfetti) {
@@ -26,7 +37,7 @@ export default function HomePage() {
     setUserAnswer("");
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/generate-question", {
+      const res = await fetch(`${API_URL}/generate-question`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -52,7 +63,7 @@ export default function HomePage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/evaluate-answer", {
+      const res = await fetch(`${API_URL}/evaluate-answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -63,7 +74,7 @@ export default function HomePage() {
       
       if (!res.ok) throw new Error("Failed to evaluate answer");
       
-      const data = await res.json();
+      const data: Evaluation = await res.json();
       setEvaluation(data);
       
       // Update score
@@ -83,7 +94,6 @@ export default function HomePage() {
         userAnswer: userAnswer,
         evaluation: data
       }]);
-      
     } catch (error) {
       console.error(error);
       alert("Error evaluating answer. Please try again.");
@@ -107,7 +117,7 @@ export default function HomePage() {
     setScore({ correct: 0, total: 0 });
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && e.ctrlKey && !loading) {
       e.preventDefault();
       submitAnswer();
